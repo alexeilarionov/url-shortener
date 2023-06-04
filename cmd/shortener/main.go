@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/alexeilarionov/url-shortener/internal/app"
 	"io"
 	"net/http"
@@ -12,19 +13,19 @@ var (
 
 func handler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
-		if req.Header.Get("Content-Type") != "text/plain" {
-			http.Error(res, "Invalid content type", http.StatusBadRequest)
-			return
-		}
+		//if req.Header.Get("Content-Type") != "text/plain" {
+		//	http.Error(res, "Invalid content type", http.StatusBadRequest)
+		//	return
+		//}
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			http.Error(res, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
-		if len(body) == 0 {
-			http.Error(res, "Empty request body", http.StatusBadRequest)
-			return
-		}
+		//if len(body) == 0 {
+		//	http.Error(res, "Empty request body", http.StatusBadRequest)
+		//	return
+		//}
 		encoded := app.Encode(body)
 		data[encoded] = string(body)
 		res.Header().Set("content-type", "text/plain")
@@ -32,11 +33,12 @@ func handler(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte(encoded))
 
 	} else if req.Method == http.MethodGet {
+		fmt.Println(req.URL)
 		path := req.URL.Path
-		if len(path) < 2 {
-			http.Error(res, "Bad request", http.StatusBadRequest)
-			return
-		}
+		//if len(path) < 2 {
+		//	http.Error(res, "Bad request", http.StatusBadRequest)
+		//	return
+		//}
 		path = path[1:]
 		if _, ok := data[path]; ok {
 			http.Redirect(res, req, data[path], http.StatusTemporaryRedirect)
