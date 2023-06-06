@@ -32,7 +32,11 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	url := scheme + "://" + req.Host + "/" + encoded
-	res.Write([]byte(url))
+	_, err = res.Write([]byte(url))
+	if err != nil {
+		http.Error(res, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func unshortenerHandler(res http.ResponseWriter, req *http.Request) {
