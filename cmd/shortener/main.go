@@ -10,7 +10,7 @@ func main() {
 	data.InitData()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.Handler)
+	mux.HandleFunc("/", handlers.RootHandler)
 	err := http.ListenAndServe(`localhost:8080`, mux)
 	if err != nil {
 		panic(err)
