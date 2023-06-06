@@ -1,65 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"github.com/alexeilarionov/url-shortener/internal/app"
-	"io"
+	"github.com/alexeilarionov/url-shortener/handlers"
+	"github.com/alexeilarionov/url-shortener/internal/app/data"
 	"net/http"
 )
 
-var (
-	data = make(map[string]string)
-)
-
-func handler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost {
-		//if req.Header.Get("Content-Type") != "text/plain" {
-		//	http.Error(res, "Invalid content type", http.StatusBadRequest)
-		//	return
-		//}
-		body, err := io.ReadAll(req.Body)
-		if err != nil {
-			http.Error(res, "Failed to read request body", http.StatusBadRequest)
-			return
-		}
-		scheme := "http"
-		if req.TLS != nil {
-			scheme = "https"
-		}
-
-		if len(body) == 0 {
-			http.Error(res, "Empty request body", http.StatusBadRequest)
-			return
-		}
-		encoded := app.Encode(body)
-		data[encoded] = string(body)
-		res.Header().Set("content-type", "text/plain")
-		res.WriteHeader(http.StatusCreated)
-		url := scheme + "://" + req.Host + "/" + encoded
-		res.Write([]byte(url))
-
-	} else if req.Method == http.MethodGet {
-		fmt.Println(req.URL)
-		path := req.URL.Path
-		if len(path) < 2 {
-			http.Error(res, "Bad request", http.StatusBadRequest)
-			return
-		}
-		path = path[1:]
-		if _, ok := data[path]; ok {
-			res.Header().Set("Location", data[path])
-			res.WriteHeader(http.StatusTemporaryRedirect)
-		}
-	} else {
-		http.Error(res, "Not supported", http.StatusBadRequest)
-		return
-	}
-}
-
 func main() {
+	data.InitData()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/", handlers.Handler)
 	err := http.ListenAndServe(`localhost:8080`, mux)
 	if err != nil {
 		panic(err)
