@@ -30,3 +30,12 @@ git fetch template && git checkout template/main .github
 При мёрже ветки с инкрементом в основную ветку `main` будут запускаться все автотесты.
 
 Подробнее про локальный и автоматический запуск читайте в [README автотестов](https://github.com/Yandex-Practicum/go-autotests).
+
+### Проверка покрытия тестами: 
+$ go test -cover -v
+
+### Создание coverage profile: 
+$ go test -coverprofile=prof.out
+
+### Визуализация покрытия: 
+$ go tool cover -html=prof.out

@@ -7,15 +7,11 @@ import (
 	"net/http"
 )
 
-func shortenerHandler(res http.ResponseWriter, req *http.Request) {
+func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, "Failed to read request body", http.StatusBadRequest)
 		return
-	}
-	scheme := "http"
-	if req.TLS != nil {
-		scheme = "https"
 	}
 
 	if len(body) == 0 {
@@ -31,7 +27,7 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	url := scheme + "://" + req.Host + "/" + encoded
+	url := "http://localhost:8080/" + encoded
 	_, err = res.Write([]byte(url))
 	if err != nil {
 		http.Error(res, "Failed to write response", http.StatusInternalServerError)
@@ -39,7 +35,7 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func unshortenerHandler(res http.ResponseWriter, req *http.Request) {
+func UnshortenerHandler(res http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	if len(path) < 2 {
 		http.Error(res, "Bad request", http.StatusBadRequest)
@@ -57,9 +53,9 @@ func unshortenerHandler(res http.ResponseWriter, req *http.Request) {
 
 func RootHandler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
-		shortenerHandler(res, req)
+		ShortenerHandler(res, req)
 	} else if req.Method == http.MethodGet {
-		unshortenerHandler(res, req)
+		UnshortenerHandler(res, req)
 	} else {
 		http.Error(res, "Not supported", http.StatusBadRequest)
 		return
