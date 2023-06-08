@@ -11,7 +11,7 @@ import (
 var (
 	dataMap        = make(map[string]string)
 	mutex          = sync.RWMutex{}
-	dataFilePath   = "storage/data.txt"
+	dataFilePath   = "/Users/lari4/go/src/url-shortener/storage/data.txt"
 	ErrKeyNotFound = errors.New("key not found")
 )
 
