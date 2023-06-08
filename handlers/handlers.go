@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/alexeilarionov/url-shortener/internal/app/data"
 	"github.com/alexeilarionov/url-shortener/internal/app/hashutil"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 )
@@ -36,28 +37,12 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func UnshortenerHandler(res http.ResponseWriter, req *http.Request) {
-	path := req.URL.Path
-	if len(path) < 2 {
-		http.Error(res, "Bad request", http.StatusBadRequest)
-		return
-	}
-	path = path[1:]
-	url, err := data.GetDataByKey(path)
+	shortenerID := chi.URLParam(req, "id")
+	url, err := data.GetDataByKey(shortenerID)
 	if err != nil {
 		http.Error(res, "Bad request", http.StatusBadRequest)
 		return
 	}
 	res.Header().Set("Location", url)
 	res.WriteHeader(http.StatusTemporaryRedirect)
-}
-
-func RootHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost {
-		ShortenerHandler(res, req)
-	} else if req.Method == http.MethodGet {
-		UnshortenerHandler(res, req)
-	} else {
-		http.Error(res, "Not supported", http.StatusBadRequest)
-		return
-	}
 }
