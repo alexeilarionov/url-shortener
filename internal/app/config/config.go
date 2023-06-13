@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"os"
 )
 
 type Config struct {
@@ -16,5 +17,13 @@ func Load() *Config {
 	flag.StringVar(&cfg.ShortURLAddr, "b", "http://localhost:8080", "The short URL server address string")
 	flag.StringVar(&cfg.Storage, "s", "memory", "type of storage to use (memory)")
 	flag.Parse()
+
+	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+		cfg.StartAddr = envRunAddr
+	}
+	if envBaseAddr := os.Getenv("BASE_URL"); envBaseAddr != "" {
+		cfg.ShortURLAddr = envBaseAddr
+	}
+
 	return cfg
 }
