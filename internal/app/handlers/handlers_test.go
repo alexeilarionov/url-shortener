@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"context"
+	"github.com/alexeilarionov/url-shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -40,12 +43,16 @@ func TestShortenerHandler(t *testing.T) {
 			},
 		},
 	}
+	h := &Handler{
+		ShortUrlAddr: "http://localhost:8080",
+		Store:        storage.NewInMemoryStorage(),
+	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
-			ShortenerHandler(w, request)
+			h.ShortenerHandler(w, request)
 
 			res := w.Result()
 			// проверяем код ответа
@@ -74,7 +81,7 @@ func TestUnshortenerHandler(t *testing.T) {
 	}{
 		{
 			name:   "positive unshortener test",
-			target: "/yXwbNnH",
+			target: "yXwbNnH",
 			want: want{
 				code:     307,
 				location: "test.com",
@@ -83,7 +90,7 @@ func TestUnshortenerHandler(t *testing.T) {
 		},
 		{
 			name:   "unshortener empty id",
-			target: "/",
+			target: "",
 			want: want{
 				code:     400,
 				location: "",
@@ -92,7 +99,7 @@ func TestUnshortenerHandler(t *testing.T) {
 		},
 		{
 			name:   "unshortener not exist id",
-			target: "/123456",
+			target: "123456",
 			want: want{
 				code:     400,
 				location: "",
@@ -100,11 +107,22 @@ func TestUnshortenerHandler(t *testing.T) {
 			},
 		},
 	}
+	h := &Handler{
+		ShortUrlAddr: "http://localhost:8080",
+		Store:        storage.NewInMemoryStorage(),
+	}
+	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("test.com"))
+	// создаём новый Recorder
+	w := httptest.NewRecorder()
+	h.ShortenerHandler(w, request)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, test.target, nil)
+			r := httptest.NewRequest(http.MethodGet, "/"+test.target, nil)
 			w := httptest.NewRecorder()
-			UnshortenerHandler(w, request)
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", test.target)
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+			h.UnshortenerHandler(w, r)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
