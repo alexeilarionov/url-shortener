@@ -9,7 +9,7 @@ import (
 )
 
 type Handler struct {
-	ShortUrlAddr string
+	ShortURLAddr string
 	Store        storage.Storage
 }
 
@@ -33,7 +33,7 @@ func (h *Handler) ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	url := h.ShortUrlAddr + "/" + encoded
+	url := h.ShortURLAddr + "/" + encoded
 	_, err = res.Write([]byte(url))
 	if err != nil {
 		http.Error(res, "Failed to write response", http.StatusInternalServerError)

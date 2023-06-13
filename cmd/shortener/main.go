@@ -23,7 +23,7 @@ func main() {
 	}
 
 	h := &handlers.Handler{
-		ShortUrlAddr: cfg.ShortUrlAddr,
+		ShortURLAddr: cfg.ShortURLAddr,
 		Store:        store,
 	}
 

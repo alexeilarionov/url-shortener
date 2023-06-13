@@ -44,7 +44,7 @@ func TestShortenerHandler(t *testing.T) {
 		},
 	}
 	h := &Handler{
-		ShortUrlAddr: "http://localhost:8080",
+		ShortURLAddr: "http://localhost:8080",
 		Store:        storage.NewInMemoryStorage(),
 	}
 	for _, test := range tests {
@@ -108,7 +108,7 @@ func TestUnshortenerHandler(t *testing.T) {
 		},
 	}
 	h := &Handler{
-		ShortUrlAddr: "http://localhost:8080",
+		ShortURLAddr: "http://localhost:8080",
 		Store:        storage.NewInMemoryStorage(),
 	}
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("test.com"))
