@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/alexeilarionov/url-shortener/internal/app/config"
 	"github.com/alexeilarionov/url-shortener/internal/app/handlers"
@@ -12,24 +11,12 @@ import (
 
 func main() {
 	cfg := config.Load()
-	var store storage.Storage
 
-	var err error
-	switch cfg.Storage {
-	case "memory":
-		store = storage.NewInMemoryStorage()
-	default:
-		err = errors.New("unknown storage type: " + cfg.Storage)
-	}
+	store := storage.NewStorage(cfg.Storage)
 
 	h := &handlers.Handler{
 		ShortURLAddr: cfg.ShortURLAddr,
 		Store:        store,
-	}
-
-	if err != nil {
-		fmt.Println(err)
-		return
 	}
 
 	r := chi.NewRouter()
@@ -39,7 +26,7 @@ func main() {
 	})
 
 	fmt.Println("Running server on", cfg.StartAddr)
-	err = http.ListenAndServe(cfg.StartAddr, r)
+	err := http.ListenAndServe(cfg.StartAddr, r)
 	if err != nil {
 		panic(err)
 	}
