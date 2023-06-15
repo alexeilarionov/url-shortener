@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alexeilarionov/url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/alexeilarionov/url-shortener/internal/app/storage"
 )
 
 func TestShortenerHandler(t *testing.T) {
