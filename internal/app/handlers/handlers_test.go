@@ -112,10 +112,10 @@ func TestUnshortenerHandler(t *testing.T) {
 		ShortURLAddr: "http://localhost:8080",
 		Store:        storage.NewInMemoryStorage(),
 	}
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("test.com"))
-	// создаём новый Recorder
-	w := httptest.NewRecorder()
-	h.ShortenerHandler(w, request)
+	err := h.Store.Store("yXwbNnH", "test.com")
+	if err != nil {
+		return
+	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/"+test.target, nil)
