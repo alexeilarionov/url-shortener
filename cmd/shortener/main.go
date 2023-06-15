@@ -12,7 +12,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	store := storage.NewStorage(cfg.Storage)
+	store := storage.NewStorage(cfg.StorageType)
 
 	h := &handlers.Handler{
 		ShortURLAddr: cfg.ShortURLAddr,
