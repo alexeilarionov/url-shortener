@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"context"
-	"github.com/alexeilarionov/url-shortener/internal/app/storage"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/alexeilarionov/url-shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestShortenerHandler(t *testing.T) {

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/alexeilarionov/url-shortener/internal/app/config"
 	"github.com/alexeilarionov/url-shortener/internal/app/handlers"
 	"github.com/alexeilarionov/url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func main() {

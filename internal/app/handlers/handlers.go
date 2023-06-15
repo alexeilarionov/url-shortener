@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"io"
+	"net/http"
+
 	"github.com/alexeilarionov/url-shortener/internal/app/hashutil"
 	"github.com/alexeilarionov/url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
-	"io"
-	"net/http"
 )
 
 type Handler struct {
