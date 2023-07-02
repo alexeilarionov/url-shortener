@@ -4,25 +4,49 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/alexeilarionov/url-shortener/internal/app/hashutil"
 	"github.com/alexeilarionov/url-shortener/internal/app/storage"
-	"github.com/go-chi/chi/v5"
 )
 
-type Handler struct {
-	ShortURLAddr string
-	Store        storage.Storage
+type (
+	Handler struct {
+		ShortURLAddr string
+		Store        storage.Storage
+	}
+
+	LoggingResponseWriter struct {
+		http.ResponseWriter
+		Status int
+		Size   int
+	}
+)
+
+func NewLoggingResponseWriter(w http.ResponseWriter) *LoggingResponseWriter {
+	return &LoggingResponseWriter{ResponseWriter: w}
 }
 
-func (h *Handler) ShortenerHandler(res http.ResponseWriter, req *http.Request) {
-	body, err := io.ReadAll(req.Body)
+func (r *LoggingResponseWriter) Write(b []byte) (int, error) {
+	size, err := r.ResponseWriter.Write(b)
+	r.Size += size
+	return size, err
+}
+
+func (r *LoggingResponseWriter) WriteHeader(statusCode int) {
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.Status = statusCode
+}
+
+func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
 
 	if len(body) == 0 {
-		http.Error(res, "Empty request body", http.StatusBadRequest)
+		http.Error(w, "Empty request body", http.StatusBadRequest)
 		return
 	}
 	encoded := hashutil.Encode(body)
@@ -32,12 +56,12 @@ func (h *Handler) ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	res.Header().Set("content-type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
+	w.Header().Set("content-type", "text/plain")
+	w.WriteHeader(http.StatusCreated)
 	url := h.ShortURLAddr + "/" + encoded
-	_, err = res.Write([]byte(url))
+	_, err = w.Write([]byte(url))
 	if err != nil {
-		http.Error(res, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
 }

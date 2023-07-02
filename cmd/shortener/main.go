@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 
 	"github.com/alexeilarionov/url-shortener/internal/app/config"
@@ -28,7 +27,8 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(logger.RequestLogger)
+	r.Use(logger.ResponseLogger)
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.ShortenerHandler)
 		r.Get("/{id}", h.UnshortenerHandler)
