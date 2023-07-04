@@ -154,7 +154,7 @@ func TestJsonShortenerHandler(t *testing.T) {
 			name: "positive json shortener test",
 			body: `{"url": "https://practicum.yandex.ru"}`,
 			want: want{
-				expectedCode: 200,
+				expectedCode: 201,
 				expectedBody: `{"result":"http://localhost:8080/a9tbDia"}`,
 				contentType:  "application/json",
 			},

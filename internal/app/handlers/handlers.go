@@ -101,9 +101,7 @@ func (h *Handler) JsonShortenerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	encoded := hashutil.Encode([]byte(sr.URL))
-
 	err = h.Store.Store(encoded, sr.URL)
 	if err != nil {
 		return
@@ -117,7 +115,7 @@ func (h *Handler) JsonShortenerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(resp)
 	if err != nil {
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
