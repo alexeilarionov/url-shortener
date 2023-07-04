@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 
@@ -20,6 +22,14 @@ type (
 		http.ResponseWriter
 		Status int
 		Size   int
+	}
+
+	ShortenRequest struct {
+		URL string `json:"url"`
+	}
+
+	ShortenResponse struct {
+		Result string `json:"result"`
 	}
 )
 
@@ -75,4 +85,42 @@ func (h *Handler) UnshortenerHandler(res http.ResponseWriter, req *http.Request)
 	}
 	res.Header().Set("Location", url)
 	res.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (h *Handler) JsonShortenerHandler(w http.ResponseWriter, r *http.Request) {
+	var sr ShortenRequest
+	var buf bytes.Buffer
+
+	_, err := buf.ReadFrom(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	if err = json.Unmarshal(buf.Bytes(), &sr); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	encoded := hashutil.Encode([]byte(sr.URL))
+
+	err = h.Store.Store(encoded, sr.URL)
+	if err != nil {
+		return
+	}
+
+	url := h.ShortURLAddr + "/" + encoded
+
+	resp, err := json.Marshal(ShortenResponse{Result: url})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }

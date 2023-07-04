@@ -33,6 +33,9 @@ func main() {
 		r.Post("/", h.ShortenerHandler)
 		r.Get("/{id}", h.UnshortenerHandler)
 	})
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/shorten", h.JsonShortenerHandler)
+	})
 
 	logger.Log.Info("Running server", zap.String("address", cfg.StartAddr))
 	err := http.ListenAndServe(cfg.StartAddr, r)
