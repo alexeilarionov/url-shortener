@@ -178,7 +178,7 @@ func TestJsonShortenerHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(test.body))
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
-			h.JsonShortenerHandler(w, request)
+			h.JSONShortenerHandler(w, request)
 
 			res := w.Result()
 			// проверяем код ответа

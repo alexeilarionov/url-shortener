@@ -34,7 +34,7 @@ func main() {
 		r.Get("/{id}", h.UnshortenerHandler)
 	})
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/shorten", h.JsonShortenerHandler)
+		r.Post("/shorten", h.JSONShortenerHandler)
 	})
 
 	logger.Log.Info("Running server", zap.String("address", cfg.StartAddr))

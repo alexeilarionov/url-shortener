@@ -87,7 +87,7 @@ func (h *Handler) UnshortenerHandler(res http.ResponseWriter, req *http.Request)
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (h *Handler) JsonShortenerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) JSONShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	var sr ShortenRequest
 	var buf bytes.Buffer
 
