@@ -28,7 +28,10 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(logger.RequestLogger)
+	r.Use(handlers.UnzipRequest)
+	r.Use(handlers.GzipHandler)
 	r.Use(logger.ResponseLogger)
+
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.ShortenerHandler)
 		r.Get("/{id}", h.UnshortenerHandler)
