@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"os/signal"
@@ -70,7 +71,7 @@ func main() {
 	}
 	logger.Log.Info("Server stopped")
 
-	err := srv.Shutdown(nil)
+	err := srv.Shutdown(context.TODO())
 	if err != nil {
 		panic(err)
 	}

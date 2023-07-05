@@ -57,7 +57,7 @@ func readFromFile(fs FileStorage) error {
 }
 
 func (s *FileStorage) Store(data ShortenedData) error {
-	s.inMemoryData.data[data.ShortUrl] = data
+	s.inMemoryData.data[data.ShortURL] = data
 	return nil
 }
 

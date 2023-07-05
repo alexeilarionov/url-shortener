@@ -13,7 +13,7 @@ func NewInMemoryStorage() *InMemoryStorage {
 }
 
 func (s *InMemoryStorage) Store(data ShortenedData) error {
-	s.data[data.ShortUrl] = data
+	s.data[data.ShortURL] = data
 	return nil
 }
 

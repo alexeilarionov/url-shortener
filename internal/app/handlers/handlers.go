@@ -67,8 +67,8 @@ func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	//err = h.Store.Store(encoded, string(body))
 	err = h.Store.Store(storage.ShortenedData{
 		UUID:        uuid.New().String(),
-		ShortUrl:    encoded,
-		OriginalUrl: string(body),
+		ShortURL:    encoded,
+		OriginalURL: string(body),
 	})
 	if err != nil {
 		return
@@ -91,7 +91,7 @@ func (h *Handler) UnshortenerHandler(res http.ResponseWriter, req *http.Request)
 		http.Error(res, "Bad request", http.StatusBadRequest)
 		return
 	}
-	res.Header().Set("Location", data.OriginalUrl)
+	res.Header().Set("Location", data.OriginalURL)
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -112,8 +112,8 @@ func (h *Handler) JSONShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	encoded := hashutil.Encode([]byte(sr.URL))
 	err = h.Store.Store(storage.ShortenedData{
 		UUID:        uuid.New().String(),
-		ShortUrl:    encoded,
-		OriginalUrl: sr.URL,
+		ShortURL:    encoded,
+		OriginalURL: sr.URL,
 	})
 	if err != nil {
 		return
