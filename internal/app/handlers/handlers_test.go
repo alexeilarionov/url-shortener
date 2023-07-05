@@ -113,7 +113,7 @@ func TestUnshortenerHandler(t *testing.T) {
 		ShortURLAddr: "http://localhost:8080",
 		Store:        storage.NewInMemoryStorage(),
 	}
-	err := h.Store.Store("yXwbNnH", "test.com")
+	err := h.Store.Store(storage.ShortenedData{UUID: "1", ShortUrl: "yXwbNnH", OriginalUrl: "test.com"})
 	if err != nil {
 		return
 	}
