@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 
 	"github.com/alexeilarionov/url-shortener/internal/app/hashutil"
 	"github.com/alexeilarionov/url-shortener/internal/app/storage"
@@ -63,7 +64,12 @@ func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	encoded := hashutil.Encode(body)
 
-	err = h.Store.Store(encoded, string(body))
+	//err = h.Store.Store(encoded, string(body))
+	err = h.Store.Store(storage.ShortenedData{
+		UUID:        uuid.New().String(),
+		ShortUrl:    encoded,
+		OriginalUrl: string(body),
+	})
 	if err != nil {
 		return
 	}
@@ -80,12 +86,12 @@ func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) UnshortenerHandler(res http.ResponseWriter, req *http.Request) {
 	shortenerID := chi.URLParam(req, "id")
-	url, err := h.Store.Get(shortenerID)
+	data, err := h.Store.Get(shortenerID)
 	if err != nil {
 		http.Error(res, "Bad request", http.StatusBadRequest)
 		return
 	}
-	res.Header().Set("Location", url)
+	res.Header().Set("Location", data.OriginalUrl)
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -104,7 +110,11 @@ func (h *Handler) JSONShortenerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	encoded := hashutil.Encode([]byte(sr.URL))
-	err = h.Store.Store(encoded, sr.URL)
+	err = h.Store.Store(storage.ShortenedData{
+		UUID:        uuid.New().String(),
+		ShortUrl:    encoded,
+		OriginalUrl: sr.URL,
+	})
 	if err != nil {
 		return
 	}

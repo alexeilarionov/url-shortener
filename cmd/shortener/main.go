@@ -2,6 +2,9 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -15,7 +18,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	store := storage.NewStorage(cfg.StorageType)
+	store := storage.NewStorage(*cfg)
 
 	if err := logger.Initialize(cfg.LogLevel); err != nil {
 		panic(err)
@@ -41,7 +44,33 @@ func main() {
 	})
 
 	logger.Log.Info("Running server", zap.String("address", cfg.StartAddr))
-	err := http.ListenAndServe(cfg.StartAddr, r)
+
+	// Create a channel to receive OS signals
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:    cfg.StartAddr,
+		Handler: r,
+	}
+
+	go func() {
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			panic(err)
+		}
+	}()
+
+	<-stop
+	if cfg.StorageType == "file" {
+		err := store.(*storage.FileStorage).Save()
+		if err != nil {
+			panic(err)
+		}
+	}
+	logger.Log.Info("Server stopped")
+
+	err := srv.Shutdown(nil)
 	if err != nil {
 		panic(err)
 	}

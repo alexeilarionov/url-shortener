@@ -1,14 +1,24 @@
 package storage
 
-type Storage interface {
-	Store(key string, value string) error
-	Get(key string) (string, error)
+import "github.com/alexeilarionov/url-shortener/internal/app/config"
+
+type ShortenedData struct {
+	UUID        string `json:"uuid"`
+	ShortUrl    string `json:"short_url"`
+	OriginalUrl string `json:"original_url"`
 }
 
-func NewStorage(storageType string) Storage {
-	switch storageType {
+type Storage interface {
+	Store(data ShortenedData) error
+	Get(key string) (ShortenedData, error)
+}
+
+func NewStorage(cfg config.Config) Storage {
+	switch cfg.StorageType {
 	case "memory":
 		return NewInMemoryStorage()
+	case "file":
+		return NewFileStorage(cfg.FileStoragePath)
 	default:
 		return NewInMemoryStorage()
 	}
