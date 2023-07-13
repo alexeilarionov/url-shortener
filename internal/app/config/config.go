@@ -31,7 +31,7 @@ func Load() *Config {
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		cfg.FileStoragePath = envFileStoragePath
 	}
-	if cfg.FileStoragePath != "" {
+	if cfg.FileStoragePath != "" && cfg.StorageType != "memory" {
 		cfg.StorageType = "file"
 	}
 	if envLogLevel := os.Getenv("LOGLEVEL"); envLogLevel != "" {
