@@ -31,10 +31,10 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Use(logger.RequestLogger)
+	r.Use(handlers.RequestLogger)
 	r.Use(handlers.UnzipRequest)
 	r.Use(handlers.GzipHandler)
-	r.Use(logger.ResponseLogger)
+	r.Use(handlers.ResponseLogger)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", h.ShortenerHandler)
@@ -44,7 +44,7 @@ func main() {
 		r.Post("/shorten", h.JSONShortenerHandler)
 	})
 
-	logger.Log.Info("Running server", zap.String("address", cfg.StartAddr))
+	logger.Log.Info("Running server", zap.String("address", cfg.StartAddr), zap.String("storage", cfg.StorageType))
 
 	// Create a channel to receive OS signals
 	stop := make(chan os.Signal, 1)
