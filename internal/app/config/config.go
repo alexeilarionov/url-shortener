@@ -17,7 +17,7 @@ func Load() *Config {
 	cfg := &Config{}
 	flag.StringVar(&cfg.StartAddr, "a", "localhost:8080", "The starting address (format: host:port)")
 	flag.StringVar(&cfg.ShortURLAddr, "b", "http://localhost:8080", "The short URL server address string")
-	flag.StringVar(&cfg.StorageType, "s", "file", "type of storage to use (memory/file)")
+	flag.StringVar(&cfg.StorageType, "s", "memory", "type of storage to use (memory/file)")
 	flag.StringVar(&cfg.LogLevel, "l", "info", "log level")
 	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db.json", "Path to file storage")
 	flag.Parse()

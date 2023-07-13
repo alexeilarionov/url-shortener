@@ -124,7 +124,7 @@ func (h *Handler) JSONShortenerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(resp)
 	if err != nil {
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
