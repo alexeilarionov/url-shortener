@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -61,7 +60,6 @@ func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Empty request body", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("body", body)
 	encoded := hashutil.Encode(body)
 
 	err = h.Store.Store(storage.ShortenedData{
