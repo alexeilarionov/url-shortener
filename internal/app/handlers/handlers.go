@@ -19,12 +19,6 @@ type (
 		Store        storage.Storage
 	}
 
-	LoggingResponseWriter struct {
-		http.ResponseWriter
-		Status int
-		Size   int
-	}
-
 	ShortenRequest struct {
 		URL string `json:"url"`
 	}
@@ -33,21 +27,6 @@ type (
 		Result string `json:"result"`
 	}
 )
-
-func NewLoggingResponseWriter(w http.ResponseWriter) *LoggingResponseWriter {
-	return &LoggingResponseWriter{ResponseWriter: w}
-}
-
-func (r *LoggingResponseWriter) Write(b []byte) (int, error) {
-	size, err := r.ResponseWriter.Write(b)
-	r.Size += size
-	return size, err
-}
-
-func (r *LoggingResponseWriter) WriteHeader(statusCode int) {
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.Status = statusCode
-}
 
 func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)

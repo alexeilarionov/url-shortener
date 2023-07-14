@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"bytes"
 	"compress/gzip"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -12,54 +12,64 @@ import (
 	"github.com/alexeilarionov/url-shortener/internal/app/logger"
 )
 
-type gzipWriter struct {
+type LoggingResponseWriter struct {
 	http.ResponseWriter
-	Writer io.Writer
+	Status int
+	Size   int
 }
 
-//func (w gzipWriter) Write(b []byte) (int, error) {
-//	contentType := w.Header().Get("Content-Type")
-//	if contentType == "application/json" || contentType == "text/html" {
-//		w.Header().Set("Content-Encoding", "gzip")
-//		return w.Writer.Write(b)
-//	}
-//	return w.ResponseWriter.Write(b)
-//}
-
-func (w gzipWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	gw            *gzip.Writer
+	buffer        bytes.Buffer
+	statusCode    int
+	headerWritten bool
 }
 
-//func (w gzipWriter) WriteHeader(statusCode int) {
-//	contentType := w.Header().Get("Content-Type")
-//	if contentType == "application/json" || contentType == "text/html" {
-//
-//	}
-//	w.ResponseWriter.WriteHeader(statusCode)
-//}
+func (w *gzipResponseWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+}
+
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.buffer.Write(b)
+}
+
+func (w *gzipResponseWriter) flushHeader() {
+	if !w.headerWritten {
+		contentType := w.Header().Get("Content-Type")
+		if contentType == "application/json" || contentType == "text/html" {
+			w.Header().Set("Content-Encoding", "gzip")
+			w.ResponseWriter.WriteHeader(w.statusCode)
+			w.gw = gzip.NewWriter(w.ResponseWriter)
+		} else {
+			w.ResponseWriter.WriteHeader(w.statusCode)
+		}
+		w.headerWritten = true
+	}
+}
+
+func (w *gzipResponseWriter) flushBody() {
+	if w.gw != nil {
+		w.gw.Write(w.buffer.Bytes())
+		w.gw.Close()
+	} else {
+		w.ResponseWriter.Write(w.buffer.Bytes())
+	}
+}
 
 func GzipHandler(next http.Handler) http.Handler {
-	gzipFn := func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
 			return
 		}
-		contentType := r.Header.Get("Content-Type")
-		if contentType != "application/json" && contentType != "text/html" {
-			next.ServeHTTP(w, r)
-			return
-		}
-		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil {
-			io.WriteString(w, err.Error())
-			return
-		}
-		defer gz.Close()
 
-		w.Header().Set("Content-Encoding", "gzip")
-		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
-	}
-	return http.HandlerFunc(gzipFn)
+		grw := &gzipResponseWriter{ResponseWriter: w, statusCode: 200}
+		next.ServeHTTP(grw, r)
+
+		grw.flushHeader()
+		grw.flushBody()
+	})
 }
 
 func UnzipRequest(next http.Handler) http.Handler {
@@ -110,4 +120,19 @@ func ResponseLogger(next http.Handler) http.Handler {
 			zap.Int("size", srw.Size),
 		)
 	})
+}
+
+func NewLoggingResponseWriter(w http.ResponseWriter) *LoggingResponseWriter {
+	return &LoggingResponseWriter{ResponseWriter: w}
+}
+
+func (r *LoggingResponseWriter) Write(b []byte) (int, error) {
+	size, err := r.ResponseWriter.Write(b)
+	r.Size += size
+	return size, err
+}
+
+func (r *LoggingResponseWriter) WriteHeader(statusCode int) {
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.Status = statusCode
 }
