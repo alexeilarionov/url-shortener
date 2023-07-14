@@ -3,24 +3,24 @@ package storage
 import "errors"
 
 type InMemoryStorage struct {
-	data map[string]string
+	data map[string]ShortenedData
 }
 
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{
-		data: make(map[string]string),
+		data: make(map[string]ShortenedData),
 	}
 }
 
-func (s *InMemoryStorage) Store(key string, value string) error {
-	s.data[key] = value
+func (s *InMemoryStorage) Store(data ShortenedData) error {
+	s.data[data.ShortURL] = data
 	return nil
 }
 
-func (s *InMemoryStorage) Get(key string) (string, error) {
+func (s *InMemoryStorage) Get(key string) (ShortenedData, error) {
 	value, exists := s.data[key]
 	if !exists {
-		return "", errors.New("key not found: " + key)
+		return ShortenedData{}, errors.New("key not found: " + key)
 	}
 	return value, nil
 }

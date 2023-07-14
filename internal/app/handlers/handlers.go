@@ -1,54 +1,112 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
 	"github.com/alexeilarionov/url-shortener/internal/app/hashutil"
 	"github.com/alexeilarionov/url-shortener/internal/app/storage"
-	"github.com/go-chi/chi/v5"
 )
 
-type Handler struct {
-	ShortURLAddr string
-	Store        storage.Storage
-}
+type (
+	Handler struct {
+		ShortURLAddr string
+		Store        storage.Storage
+	}
 
-func (h *Handler) ShortenerHandler(res http.ResponseWriter, req *http.Request) {
-	body, err := io.ReadAll(req.Body)
+	ShortenRequest struct {
+		URL string `json:"url"`
+	}
+
+	ShortenResponse struct {
+		Result string `json:"result"`
+	}
+)
+
+func (h *Handler) ShortenerHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
 
 	if len(body) == 0 {
-		http.Error(res, "Empty request body", http.StatusBadRequest)
+		http.Error(w, "Empty request body", http.StatusBadRequest)
 		return
 	}
 	encoded := hashutil.Encode(body)
 
-	err = h.Store.Store(encoded, string(body))
+	err = h.Store.Store(storage.ShortenedData{
+		UUID:        uuid.New().String(),
+		ShortURL:    encoded,
+		OriginalURL: string(body),
+	})
 	if err != nil {
 		return
 	}
 
-	res.Header().Set("content-type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
+	w.Header().Set("content-type", "text/plain")
+	w.WriteHeader(http.StatusCreated)
 	url := h.ShortURLAddr + "/" + encoded
-	_, err = res.Write([]byte(url))
+	_, err = w.Write([]byte(url))
 	if err != nil {
-		http.Error(res, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *Handler) UnshortenerHandler(res http.ResponseWriter, req *http.Request) {
 	shortenerID := chi.URLParam(req, "id")
-	url, err := h.Store.Get(shortenerID)
+	data, err := h.Store.Get(shortenerID)
 	if err != nil {
 		http.Error(res, "Bad request", http.StatusBadRequest)
 		return
 	}
-	res.Header().Set("Location", url)
+	res.Header().Set("Location", data.OriginalURL)
 	res.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (h *Handler) JSONShortenerHandler(w http.ResponseWriter, r *http.Request) {
+	var sr ShortenRequest
+	var buf bytes.Buffer
+
+	_, err := buf.ReadFrom(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	if err = json.Unmarshal(buf.Bytes(), &sr); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	encoded := hashutil.Encode([]byte(sr.URL))
+	err = h.Store.Store(storage.ShortenedData{
+		UUID:        uuid.New().String(),
+		ShortURL:    encoded,
+		OriginalURL: sr.URL,
+	})
+	if err != nil {
+		return
+	}
+
+	url := h.ShortURLAddr + "/" + encoded
+
+	resp, err := json.Marshal(ShortenResponse{Result: url})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }

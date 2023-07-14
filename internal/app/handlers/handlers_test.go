@@ -113,7 +113,7 @@ func TestUnshortenerHandler(t *testing.T) {
 		ShortURLAddr: "http://localhost:8080",
 		Store:        storage.NewInMemoryStorage(),
 	}
-	err := h.Store.Store("yXwbNnH", "test.com")
+	err := h.Store.Store(storage.ShortenedData{UUID: "1", ShortURL: "yXwbNnH", OriginalURL: "test.com"})
 	if err != nil {
 		return
 	}
@@ -134,6 +134,62 @@ func TestUnshortenerHandler(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, test.want.body, string(resBody))
 			assert.Equal(t, test.want.location, res.Header.Get("Location"))
+		})
+	}
+}
+
+func TestJsonShortenerHandler(t *testing.T) {
+	type want struct {
+		expectedCode int
+		expectedBody string
+		contentType  string
+	}
+	tests := []struct {
+		name   string
+		method string
+		body   string
+		want   want
+	}{
+		{
+			name: "positive json shortener test",
+			body: `{"url": "https://practicum.yandex.ru"}`,
+			want: want{
+				expectedCode: 201,
+				expectedBody: `{"result":"http://localhost:8080/a9tbDia"}`,
+				contentType:  "application/json",
+			},
+		},
+		{
+			name: "shortener empty body test",
+			body: "",
+			want: want{
+				expectedCode: 400,
+				expectedBody: "unexpected end of JSON input\n",
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+	}
+	h := &Handler{
+		ShortURLAddr: "http://localhost:8080",
+		Store:        storage.NewInMemoryStorage(),
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(test.body))
+			// создаём новый Recorder
+			w := httptest.NewRecorder()
+			h.JSONShortenerHandler(w, request)
+
+			res := w.Result()
+			// проверяем код ответа
+			assert.Equal(t, test.want.expectedCode, res.StatusCode)
+			// получаем и проверяем тело запроса
+			defer res.Body.Close()
+			resBody, err := io.ReadAll(res.Body)
+
+			require.NoError(t, err)
+			assert.Equal(t, test.want.expectedBody, string(resBody))
+			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
 }
